@@ -1,12 +1,9 @@
 (ns tst.demo.jdbc
   (:use demo.core tupelo.core tupelo.test)
   (:require
-    [korma.db :as kdb]
-    [korma.core :as korma]
     [clojure.java.jdbc :as jdbc]
     [clojure.string :as str]
-    [clojure.java.io :as io] )
-  (:import [demo Calc] ))
+    [clojure.java.io :as io] ))
 
 (def db {:classname   "org.h2.Driver"
          :subprotocol "h2:mem"
@@ -19,45 +16,50 @@
          })
 
 (dotest
-  (spyx (jdbc/db-do-commands db ["drop table if exists tags"]))
+  (spyx (jdbc/db-do-commands db ["drop table if exists langs"]))
+  (spyx (jdbc/db-do-commands db ["drop table if exists releases"]))
   (spy :create
        (jdbc/db-do-commands
          db
-         (jdbc/create-table-ddl :tags
+         (jdbc/create-table-ddl :langs
                                 [[:id :serial]
-                                 [:name "varchar not null"]])))
+                                 [:lang "varchar not null"]])))
+  (spy :create
+       (jdbc/db-do-commands
+         db
+         (jdbc/create-table-ddl :releases
+                                [[:id :serial]
+                                 [:desc "varchar not null"]
+                                 [:langId "numeric"]])))
   (spy :insert
-       (jdbc/insert! db :tags
-                     {:name "Clojure"}
-                     {:name "Java"}))
-  ;; -> ({:name "Clojure", :id 1} {:name "Java", :id 2})
+       (jdbc/insert-multi! db :langs
+                           [{:lang "Clojure"}
+                            {:lang "Java"}]))
+  ;; -> ({:lang "Clojure", :id 1} {:lang "Java", :id 2})
+  (spyx-pretty (jdbc/query db ["select * from langs"]))
 
-  (spy :query
-       (jdbc/query db ["select * from tags where name='Clojure'"]))
-  ;; -> ({:name "Clojure", :id 1})
+  (let [clj-id (grab :id (only (jdbc/query db ["select id from langs where lang='Clojure'"])))]
+    (spyx clj-id)
+    (spy :insert-rel
+         (jdbc/insert-multi! db :releases
+                             [{:desc "ancients" :langId clj-id}
+                              {:desc "1.8" :langId clj-id}
+                              {:desc "1.9" :langId clj-id}])) )
+  (let [java-id (grab :id (only (jdbc/query db ["select id from langs where lang='Java'"])))]
+    (spyx java-id)
+    (spy :insert-rel
+         (jdbc/insert-multi! db :releases
+                             [{:desc "dusty" :langId java-id}
+                              {:desc "8" :langId java-id}
+                              {:desc "9" :langId java-id}
+                              {:desc "10" :langId java-id}])) )
+  (spyx-pretty
+   (jdbc/query db [
+   "select langs.lang, releases.desc
+       from langs inner join releases
+       on (langs.id = releases.langId)
+       where lang = 'Clojure' "]) )
 
   )
 
-
-;(dotest
-;  (is= 5 (spyx (+ 2 3)))        ; expected equality
-;  (isnt= 9 (+ 2 3))             ; expected inequality
-;  (throws? (/ 5 0))             ; expected error condition
-;  (is true)                     ; expected truthy-ness
-;  (isnt false)                  ; expected falsey-ness
-;
-;  ; basic clojure tests
-;  (is= 4   (mult 2 2))
-;  (is= 5.0 (mult 2 2.5))
-;
-;  ; resource access & regex
-;  (let [crisis-txt (slurp (io/resource "thomas-paine.txt")) ]
-;    (is (truthy? (re-find #"THESE are the times" crisis-txt))))
-;
-;  ; java interop
-;  (is= 5.0 (spyx (Calc/add 2 3)))
-;  (let [result (spyxx (demo.Calc/incVals {"able" 1 "baker" 2} )) ]
-;    (is= {"able" 2 "baker" 3} result)
-;    (is= java.util.HashMap (type result)))
-;)
 
