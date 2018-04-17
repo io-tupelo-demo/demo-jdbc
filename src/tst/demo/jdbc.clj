@@ -1,4 +1,4 @@
-(ns tst.demo.core
+(ns tst.demo.jdbc
   (:use demo.core tupelo.core tupelo.test)
   (:require
     [korma.db :as kdb]
@@ -19,7 +19,6 @@
          })
 
 (dotest
-  (spyx (jdbc/db-do-commands db ["drop table if exists tags"]))
   (spyx (jdbc/db-do-commands db ["drop table if exists tags"]))
   (spy :create
        (jdbc/db-do-commands
