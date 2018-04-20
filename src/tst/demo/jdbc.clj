@@ -6,14 +6,13 @@
     [clojure.java.io :as io] ))
 
 (def db {:classname   "org.h2.Driver"
-         :subprotocol "h2:mem"
-        ;:subname     "./korma.db"
+         :subprotocol "h2:mem" ; the prefix `jdbc:` is added automatically
          :subname     "demo;DB_CLOSE_DELAY=-1" ; -1 very important!!!
                           ; http://www.h2database.com/html/features.html#in_memory_databases
                           ; http://makble.com/using-h2-in-memory-database-in-clojure
-         :user "sa"
-         :password ""
-         })
+         :user "sa"           ; "system admin"
+         :password ""         ; empty string by default
+        })
 
 (dotest
   (spyx (jdbc/db-do-commands db ["drop table if exists langs"]))
