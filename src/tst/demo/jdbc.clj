@@ -54,15 +54,29 @@
                            {:desc "9" :langId java-id}
                            {:desc "10" :langId java-id}])))
 
-  (let [result-1 (jdbc/query db ["select (langs.lang, releases.desc)
+  (let [
+        result-0 (jdbc/query db ["select (langs.lang, releases.desc)
                                    from    langs join releases
                                    on     (langs.id = releases.langId)
                                    where  (lang = 'Clojure') "])
+
+        result-1 (jdbc/query db ["select (l.lang, r.desc)
+                                   from    langs as l
+                                             join releases as r
+                                   on     (l.id = r.langId)
+                                   where  (l.lang = 'Clojure') "])
+
         result-2 (jdbc/query db ["select (langs.lang, releases.desc)
                                   from    langs, releases
                                   where  ( (langs.id = releases.langId)
-                                    and    (lang = 'Clojure') ) " ]) ]
-    (sets= result-1 result-2
+                                    and    (lang = 'Clojure') ) " ])
+
+        result-3 (jdbc/query db ["select (l.lang, r.desc)
+                                  from    langs as l, releases as r
+                                  where  ( (l.id = r.langId)
+                                    and    (l.lang = 'Clojure') ) " ])
+  ]
+    (sets= result-0 result-1 result-2 result-3
            [{:lang "Clojure", :desc "1.8"}
             {:lang "Clojure", :desc "1.9"}
             {:lang "Clojure", :desc "ancients"}])))
