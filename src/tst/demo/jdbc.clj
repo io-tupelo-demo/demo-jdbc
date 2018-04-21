@@ -16,8 +16,8 @@
 
 (dotest
   ; creates & drops a connection (& transaction) for each command
-  (jdbc/db-do-commands db ["drop table if exists langs"]) ; => (0)
-  (jdbc/db-do-commands db ["drop table if exists releases"]) ; => (0)
+  (jdbc/db-do-commands db ["drop table if exists langs"
+                           "drop table if exists releases"]) ; => (0 0)
 
   ; Creates and uses a connection for all commands
   (jdbc/with-db-connection
