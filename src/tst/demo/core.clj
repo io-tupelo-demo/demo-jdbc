@@ -1,9 +1,6 @@
 (ns tst.demo.core
   (:use demo.core tupelo.core tupelo.test)
   (:require
-    [korma.db :as kdb]
-    [korma.core :as korma]
-    [clojure.java.jdbc :as jdbc]
     [clojure.string :as str]
     [clojure.java.io :as io] )
   (:import [demo Calc] ))
