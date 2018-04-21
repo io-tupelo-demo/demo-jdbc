@@ -54,12 +54,17 @@
                            {:desc "9" :langId java-id}
                            {:desc "10" :langId java-id}])))
 
-  (let [result (jdbc/query db ["select langs.lang, releases.desc
-                                   from   langs inner join releases
+  (let [result-1 (jdbc/query db ["select (langs.lang, releases.desc)
+                                   from    langs join releases
                                    on     (langs.id = releases.langId)
-                                   where  (lang = 'Clojure') "])]
-    (sets= result [{:lang "Clojure", :desc "1.8"}
-                   {:lang "Clojure", :desc "1.9"}
-                   {:lang "Clojure", :desc "ancients"}] )))
+                                   where  (lang = 'Clojure') "])
+        result-2 (jdbc/query db ["select (langs.lang, releases.desc)
+                                  from    langs, releases
+                                  where  ( (langs.id = releases.langId)
+                                    and    (lang = 'Clojure') ) " ]) ]
+    (sets= result-1 result-2
+           [{:lang "Clojure", :desc "1.8"}
+            {:lang "Clojure", :desc "1.9"}
+            {:lang "Clojure", :desc "ancients"}])))
 
 
