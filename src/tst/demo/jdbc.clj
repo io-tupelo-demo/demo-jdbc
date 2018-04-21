@@ -22,20 +22,20 @@
   ; Creates and uses a connection for all commands
   (jdbc/with-db-connection
     [conn db]
-    (jdbc/db-do-commands      ; => (0)
+    (jdbc/db-do-commands
       conn
-      (jdbc/create-table-ddl :langs
-                             [[:id :serial]
-                              [:lang "varchar not null"]]))
-    (jdbc/db-do-commands      ; => (0)
-      conn
-      (jdbc/create-table-ddl :releases
-                             [[:id :serial]
-                              [:desc "varchar not null"]
-                              [:langId "numeric"]])))
+      [(jdbc/create-table-ddl :langs
+                              [[:id :serial]
+                               [:lang "varchar not null"]])
+       (jdbc/create-table-ddl :releases
+                              [[:id :serial]
+                               [:desc "varchar not null"]
+                               [:langId "numeric"]]) ]))
+
   (jdbc/insert-multi! db :langs ; => ({:id 1} {:id 2})
                       [{:lang "Clojure"}
                        {:lang "Java"}])
+
   (let [result (jdbc/query db ["select * from langs"])]
     (is= result [{:id 1, :lang "Clojure"} {:id 2, :lang "Java"}]))
 
