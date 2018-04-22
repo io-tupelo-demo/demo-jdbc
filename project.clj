@@ -6,6 +6,7 @@
   :dependencies
   [
    [com.h2database/h2 "1.4.197"]
+   [hikari-cp "2.3.0"] ;[com.zaxxer/HikariCP "3.1.0"]
    [org.clojure/java.jdbc "0.7.5"]
    [org.clojure/clojure "1.9.0"]
    [org.clojure/spec.alpha "0.1.143"]
