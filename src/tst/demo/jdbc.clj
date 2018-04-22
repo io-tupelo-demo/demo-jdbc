@@ -83,36 +83,39 @@
 
   ; Creates and uses a connection for each command
   (let [
-        result-0 (jdbc/query raw-db-spec ["select (langs.lang, releases.desc)
-                                   from    langs join releases
-                                   on     (langs.id = releases.langId)
-                                   where  (lang = 'Clojure') "])
-
-        result-1 (jdbc/query raw-db-spec ["select (l.lang, r.desc)
-                                   from    langs as l
-                                             join releases as r
-                                   on     (l.id = r.langId)
-                                   where  (l.lang = 'Clojure') "])
-
-        result-2 (jdbc/query raw-db-spec ["select (langs.lang, releases.desc)
-                                  from    langs, releases
-                                  where  ( (langs.id = releases.langId)
-                                    and    (lang = 'Clojure') ) "])
-
-        result-3 (jdbc/query raw-db-spec ["select (l.lang, r.desc)
-                                  from    langs as l, releases as r
-                                  where  ( (l.id = r.langId)
-                                    and    (l.lang = 'Clojure') ) "])
+        ; note cannot wrap select list in parens or get "bulk" output
+        result-0 (jdbc/query raw-db-spec ["select langs.lang, releases.desc
+                                             from    langs join releases
+                                             on     (langs.id = releases.langId)
+                                             where  (lang = 'Clojure') "])
+        result-1 (jdbc/query raw-db-spec ["select l.lang, r.desc
+                                             from    langs as l
+                                                       join releases as r
+                                             on     (l.id = r.langId)
+                                             where  (l.lang = 'Clojure') "])
+        result-2 (jdbc/query raw-db-spec ["select langs.lang, releases.desc
+                                              from    langs, releases
+                                              where  ( (langs.id = releases.langId)
+                                                and    (lang = 'Clojure') ) "])
+        result-3 (jdbc/query raw-db-spec ["select l.lang, r.desc
+                                            from    langs as l, releases as r
+                                            where  ( (l.id = r.langId)
+                                              and    (l.lang = 'Clojure') ) "])
         ]
+    (nl)
+    (spyx-pretty result-0)
+    (nl)
     ;(sets= result-0 result-1 result-2 result-3  ; #todo use this
     ;       [{:lang "Clojure", :desc "1.8"}
     ;        {:lang "Clojure", :desc "1.9"}
     ;        {:lang "Clojure", :desc "ancients"}])
-    (is (= (set result-0) (set result-1) (set result-2) (set result-3)
-           (set [{:lang "Clojure", :desc "1.8"}
+    (is (= (set [{:lang "Clojure", :desc "1.8"}
                  {:lang "Clojure", :desc "1.9"}
-                 {:lang "Clojure", :desc "ancients"}])))
-    )
+                 {:lang "Clojure", :desc "ancients"}])
+           (set result-0)
+           (set result-1)
+           (set result-2)
+           (set result-3))) )
 
   ; close the connection - also closes/destroys the in-memory database
   (pool/close-datasource datasource)
