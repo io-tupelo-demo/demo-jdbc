@@ -104,10 +104,15 @@
                                   where  ( (l.id = r.langId)
                                     and    (l.lang = 'Clojure') ) "])
         ]
-    (sets= result-0 result-1 result-2 result-3
-           [{:lang "Clojure", :desc "1.8"}
-            {:lang "Clojure", :desc "1.9"}
-            {:lang "Clojure", :desc "ancients"}]))
+    ;(sets= result-0 result-1 result-2 result-3  ; #todo use this
+    ;       [{:lang "Clojure", :desc "1.8"}
+    ;        {:lang "Clojure", :desc "1.9"}
+    ;        {:lang "Clojure", :desc "ancients"}])
+    (is (= (set result-0) (set result-1) (set result-2) (set result-3)
+           (set [{:lang "Clojure", :desc "1.8"}
+                 {:lang "Clojure", :desc "1.9"}
+                 {:lang "Clojure", :desc "ancients"}])))
+    )
 
   ; close the connection - also closes/destroys the in-memory database
   (pool/close-datasource datasource)
