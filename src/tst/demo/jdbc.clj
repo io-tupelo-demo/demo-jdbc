@@ -9,33 +9,11 @@
   {:classname   "org.h2.Driver"
    :subprotocol "h2:mem"    ; the prefix `jdbc:` is added automatically
    :subname     "demo;DB_CLOSE_DELAY=-1" ; `;DB_CLOSE_DELAY=-1` very important!!!
-   ; http://www.h2database.com/html/features.html#in_memory_databases
-   ; http://makble.com/using-h2-in-memory-database-in-clojure
+                     ; http://www.h2database.com/html/features.html#in_memory_databases
+                     ; http://makble.com/using-h2-in-memory-database-in-clojure
    :user        "sa"        ; "system admin"
    :password    ""          ; empty string by default
    })
-
-(def datasource-options-sample {:auto-commit        true
-                                :read-only          false
-                                :connection-timeout 30000
-                                :validation-timeout 5000
-                                :idle-timeout       600000
-                                :max-lifetime       1800000
-                                :minimum-idle       10
-                                :maximum-pool-size  10
-                                :pool-name          "db-pool"
-                                :adapter            "h2" ; "postgresql"
-                                :username           "sa"
-                                :password           ""
-                                :database-name      "database"
-                                :server-name        "localhost"
-                                :port-number        5432
-                                :register-mbeans    false})
-(def datasource-options {:adapter  "h2"
-                         :url      "jdbc:h2:mem:demo;DB_CLOSE_DELAY=-1"
-                         :username "sa"
-                         :password ""})
-(def datasource (pool/make-datasource datasource-options))
 
 (dotest
   ; creates & drops a connection (& transaction) for each command
@@ -55,31 +33,31 @@
                                [:desc "varchar not null"]
                                [:langId "numeric"]])]))
 
-  ; use the connection pool
+  ; create & use a connection for multiple commands
   (jdbc/with-db-connection
-    [conn {:datasource datasource}]
+    [conn raw-db-spec]
     (jdbc/insert-multi! raw-db-spec :langs ; => ({:id 1} {:id 2})
                         [{:lang "Clojure"}
                          {:lang "Java"}])
 
     (let [result (jdbc/query raw-db-spec ["select * from langs"])]
       (is= result [{:id 1, :lang "Clojure"}
-                   {:id 2, :lang "Java"}]))
+                   {:id 2, :lang "Java"}])))
 
-    ; Wraps all commands in a single transaction
-    (jdbc/with-db-transaction
-      [tx conn]
-      (let [clj-id (grab :id (only (jdbc/query tx ["select id from langs where lang='Clojure'"])))]
-        (jdbc/insert-multi! tx :releases
-                            [{:desc "ancients" :langId clj-id}
-                             {:desc "1.8" :langId clj-id}
-                             {:desc "1.9" :langId clj-id}]))
-      (let [java-id (grab :id (only (jdbc/query tx ["select id from langs where lang='Java'"])))]
-        (jdbc/insert-multi! tx :releases
-                            [{:desc "dusty" :langId java-id}
-                             {:desc "8" :langId java-id}
-                             {:desc "9" :langId java-id}
-                             {:desc "10" :langId java-id}]))))
+  ; Wraps all commands in a single transaction
+  (jdbc/with-db-transaction
+    [tx raw-db-spec]
+    (let [clj-id (grab :id (only (jdbc/query tx ["select id from langs where lang='Clojure'"])))]
+      (jdbc/insert-multi! tx :releases
+                          [{:desc "ancients" :langId clj-id}
+                           {:desc "1.8" :langId clj-id}
+                           {:desc "1.9" :langId clj-id}]))
+    (let [java-id (grab :id (only (jdbc/query tx ["select id from langs where lang='Java'"])))]
+      (jdbc/insert-multi! tx :releases
+                          [{:desc "dusty" :langId java-id}
+                           {:desc "8" :langId java-id}
+                           {:desc "9" :langId java-id}
+                           {:desc "10" :langId java-id}])))
 
   ; Creates and uses a connection for each command
   (let [
@@ -104,7 +82,6 @@
         ]
     (nl)
     (spyx-pretty result-0)
-    (nl)
     ;(sets= result-0 result-1 result-2 result-3  ; #todo use this
     ;       [{:lang "Clojure", :desc "1.8"}
     ;        {:lang "Clojure", :desc "1.9"}
@@ -117,7 +94,5 @@
            (set result-2)
            (set result-3))) )
 
-  ; close the connection - also closes/destroys the in-memory database
-  (pool/close-datasource datasource)
 )
 
