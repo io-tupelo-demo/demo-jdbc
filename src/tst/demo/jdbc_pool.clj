@@ -97,16 +97,13 @@
                                             from    langs as l, releases as r
                                             where  ( (l.id = r.langId)
                                               and    (l.lang = 'Clojure') ) "])]
-    ;(sets= result-0 result-1 result-2 result-3  ; #todo use this
-    ;       [{:lang "Clojure", :desc "1.8"}
-    ;        {:lang "Clojure", :desc "1.9"}
-    ;        {:lang "Clojure", :desc "ancients"}])
-    (is (= (set [{:lang "Clojure", :desc "1.8"}
-                 {:lang "Clojure", :desc "1.9"}
-                 {:lang "Clojure", :desc "ancients"}])
-           (set result-0)
-           (set result-1)
-           (set result-2)
-           (set result-3))))
-  )
+
+    (let [expected [{:lang "Clojure", :desc "1.8"}
+                    {:lang "Clojure", :desc "1.9"}
+                    {:lang "Clojure", :desc "ancients"}]]
+      (set= expected result-0)
+      (set= expected result-1)
+      (set= expected result-2)
+      (set= expected result-3))
+    (println "all tests finished") ) )
 
