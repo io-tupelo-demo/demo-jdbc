@@ -5,7 +5,9 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [hikari-cp.core :as pool]
-    ))
+    [tupelo.java-time :as tjt]
+    [clojure.walk :as walk])
+  (:import [java.time ZonedDateTime Instant OffsetDateTime]))
 
 (def datasource-options-sample {:auto-commit        true
                                 :read-only          false
@@ -24,17 +26,25 @@
                                 :port-number        5432
                                 :register-mbeans    false})
 
-(def datasource-options {:adapter  "h2"
-                         :url      "jdbc:h2:mem:demo;DB_CLOSE_DELAY=-1"
-                         :username "sa"
-                         :password ""})
+(def datasource-options-h2 {:adapter  "h2"
+                            :url      "jdbc:h2:mem:demo;DB_CLOSE_DELAY=-1"
+                            :username "sa"
+                            :password ""})
+
+(def datasource-options-pg
+  {:adapter       "postgresql"
+   :database-name "alan"
+   :server-name   "localhost"
+   :port-number   5433
+   :username      "alan"
+   :password      "secret" } )
 
 (def ^:dynamic db-conn nil)
 
 (defn with-connection-pool
   "Creates and uses a connection for test function"
   [tst-fn]
-  (let [datasource (pool/make-datasource datasource-options)]
+  (let [datasource (pool/make-datasource datasource-options-pg)]
     (binding [db-conn {:datasource datasource}]
       (tst-fn)
       (pool/close-datasource datasource)))) ; close the connection - also closes/destroys the in-memory database
@@ -43,67 +53,51 @@
   :once with-connection-pool) ; use the same db connection pool for all tests
 
 (dotest
-  ; creates & drops a connection (& transaction) for each command
-  (jdbc/db-do-commands db-conn ["drop table if exists langs"
-                                "drop table if exists releases"])
+  (jdbc/db-do-commands db-conn ["drop table if exists langs"])
+  (jdbc/db-do-commands db-conn
+    [(jdbc/create-table-ddl :langs [[:id :serial]
+                                    [:lang "varchar not null"]
+                                    [:creation :timestamptz]])]) ; select => java.sql.TimeStamp
+  (jdbc/insert-multi! db-conn :langs
+    [{:lang "Clojure" :creation (OffsetDateTime/parse "2008-01-01T12:34:56.123Z")}
+     {:lang "Java"    :creation (OffsetDateTime/parse "1995-06-01T07:08:09.123Z")}])
 
-  (jdbc/db-do-commands
-    db-conn
-    [(jdbc/create-table-ddl :langs
-                            [[:id :serial]
-                             [:lang "varchar not null"]])
-     (jdbc/create-table-ddl :releases
-                            [[:id :serial]
-                             [:desc "varchar not null"]
+  (let [result     (vec (jdbc/query db-conn ["select * from langs"]))
+        times      (mapv :creation result)
+        final-1      (tjt/java-sql-timestamp->java-time-instant result)
+        final-2      (tjt/stringify-instants final-1)
+        ]
+    (spy-pretty result)
+    (spyxx times)
+    (spyxx (first times))
+    (is= final-1
+      [{:id 1, :lang "Clojure", :creation (Instant/parse "2008-01-01T12:34:56.123Z")}
+       {:id 2, :lang "Java", :creation (Instant/parse "1995-06-01T07:08:09.123Z")}])
+    (is= final-2
+      [{:id 1, :lang "Clojure", :creation "2008-01-01T12:34:56.123Z"}
+       {:id 2, :lang "Java", :creation "1995-06-01T07:08:09.123Z"}])
 
-                             [:langId "numeric"]])])
-  (jdbc/insert-multi! db-conn :langs ; => ({:id 1} {:id 2})
-                      [{:lang "Clojure"}
-                       {:lang "Java"}])
-  (let [result (jdbc/query db-conn ["select * from langs"])]
-    (is= result [{:id 1, :lang "Clojure"}
-                 {:id 2, :lang "Java"}]))
+  ))
 
-  ; Wraps all commands in a single transaction
-  (jdbc/with-db-transaction
-    [tx db-conn]
-    (let [clj-id (grab :id (only (jdbc/query tx ["select id from langs where lang='Clojure'"])))]
-      (jdbc/insert-multi! tx :releases
-                          [{:desc "ancients" :langId clj-id}
-                           {:desc "1.8" :langId clj-id}
-                           {:desc "1.9" :langId clj-id}]))
-    (let [java-id (grab :id (only (jdbc/query tx ["select id from langs where lang='Java'"])))]
-      (jdbc/insert-multi! tx :releases
-                          [{:desc "dusty" :langId java-id}
-                           {:desc "8" :langId java-id}
-                           {:desc "9" :langId java-id}
-                           {:desc "10" :langId java-id}])))
-  (let [
-        ; note cannot wrap select list in parens or get "bulk" output
-        result-0 (jdbc/query db-conn ["select langs.lang, releases.desc
-                                             from    langs join releases
-                                             on     (langs.id = releases.langId)
-                                             where  (lang = 'Clojure') "])
-        result-1 (jdbc/query db-conn ["select l.lang, r.desc
-                                             from    langs as l
-                                                       join releases as r
-                                             on     (l.id = r.langId)
-                                             where  (l.lang = 'Clojure') "])
-        result-2 (jdbc/query db-conn ["select langs.lang, releases.desc
-                                              from    langs, releases
-                                              where  ( (langs.id = releases.langId)
-                                                and    (lang = 'Clojure') ) "])
-        result-3 (jdbc/query db-conn ["select l.lang, r.desc
-                                            from    langs as l, releases as r
-                                            where  ( (l.id = r.langId)
-                                              and    (l.lang = 'Clojure') ) "])]
 
-    (let [expected [{:lang "Clojure", :desc "1.8"}
-                    {:lang "Clojure", :desc "1.9"}
-                    {:lang "Clojure", :desc "ancients"}]]
-      (set= expected result-0)
-      (set= expected result-1)
-      (set= expected result-2)
-      (set= expected result-3))
-    (println "all tests finished") ) )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

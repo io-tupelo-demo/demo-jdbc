@@ -16,6 +16,8 @@
    })
 
 (dotest
+  (println "tst.demo.jdbc - enter")
+
   ; creates & drops a connection (& transaction) for each command
   (jdbc/db-do-commands raw-db-spec ["drop table if exists langs"
                                     "drop table if exists releases"])
@@ -93,6 +95,8 @@
            (set result-1)
            (set result-2)
            (set result-3))) )
+
+  (println "tst.demo.jdbc - leave")
 
 )
 

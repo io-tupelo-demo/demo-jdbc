@@ -10,8 +10,9 @@
      [org.clojure/clojure "1.9.0"]
      [org.clojure/spec.alpha "0.1.143"]
      [org.clojure/test.check "0.9.0"]
+     [org.postgresql/postgresql "42.2.5"] ; https://mvnrepository.com/artifact/org.postgresql/postgresql
      [prismatic/schema "1.1.9"]
-     [tupelo "0.9.111"]
+     [tupelo "0.9.128"]
      ]
   :profiles {:dev     {:dependencies []
                        :plugins      [[com.jakemccrary/lein-test-refresh "0.22.0"]
@@ -24,7 +25,9 @@
 
   :source-paths ["src"]
   :test-paths ["src"]
+  :libs [ "libs/"]
   :java-source-paths ["src-java"]
   :target-path "target/%s"
   :jvm-opts ["-Xms500m" "-Xmx2g"]
   )
+
