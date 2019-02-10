@@ -64,12 +64,8 @@
 
   (let [result     (vec (jdbc/query db-conn ["select * from langs"]))
         times      (mapv :creation result)
-        final-1      (tjt/java-sql-timestamp->java-time-instant result)
-        final-2      (tjt/stringify-instants final-1)
-        ]
-    (spy-pretty result)
-    (spyxx times)
-    (spyxx (first times))
+        final-1      (tjt/walk-timestamp->instant result)
+        final-2      (tjt/walk-instant->str final-1) ]
     (is= final-1
       [{:id 1, :lang "Clojure", :creation (Instant/parse "2008-01-01T12:34:56.123Z")}
        {:id 2, :lang "Java", :creation (Instant/parse "1995-06-01T07:08:09.123Z")}])
