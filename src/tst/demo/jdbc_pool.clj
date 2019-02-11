@@ -1,7 +1,5 @@
 (ns tst.demo.jdbc-pool
-  (:use demo.core
-        tupelo.core
-        tupelo.test)
+  (:use demo.core tupelo.core tupelo.test)
   (:require
     [clojure.java.jdbc :as jdbc]
     [hikari-cp.core :as pool]
