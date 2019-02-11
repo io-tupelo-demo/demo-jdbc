@@ -19,11 +19,11 @@
                                 :maximum-pool-size  10
                                 :pool-name          "db-pool"
                                 :adapter            "h2" ; "postgresql"
-                                :username           "sa"
-                                :password           ""
                                 :database-name      "database"
                                 :server-name        "localhost"
                                 :port-number        5432
+                                :username           "sa"
+                                :password           ""
                                 :register-mbeans    false})
 
 (def datasource-options-h2 {:adapter  "h2"
@@ -32,12 +32,13 @@
                             :password ""})
 
 (def datasource-options-pg
-  {:adapter       "postgresql"
-   :database-name "alan"
-   :server-name   "localhost"
-   :port-number   5433
-   :username      "alan"
-   :password      "secret" } )
+  (glue datasource-options-sample
+    {:adapter       "postgresql"
+     :database-name "alan"
+     :server-name   "localhost"
+     :port-number   5433
+     :username      "alan"
+     :password      "secret"}))
 
 (def ^:dynamic db-conn nil)
 
@@ -58,22 +59,22 @@
     [(jdbc/create-table-ddl :langs [[:id :serial]
                                     [:lang "varchar not null"]
                                     [:creation :timestamptz]])]) ; select => java.sql.TimeStamp
-  (jdbc/insert-multi! db-conn :langs
-    [{:lang "Clojure" :creation (OffsetDateTime/parse "2008-01-01T12:34:56.123Z")}
-     {:lang "Java"    :creation (OffsetDateTime/parse "1995-06-01T07:08:09.123Z")}])
+  (let [java-bday-str "1995-06-01T07:08:09.123Z"
+        clj-bday-str  "2008-01-01T12:34:56.123Z"]
+    (jdbc/insert-multi! db-conn :langs
+      [{:lang "Clojure" :creation (OffsetDateTime/parse clj-bday-str)}
+       {:lang "Java" :creation (OffsetDateTime/parse java-bday-str)}])
+    (let [result  (vec (jdbc/query db-conn ["select * from langs"]))
+          final-1 (tjt/walk-timestamp->instant result)
+          final-2 (tjt/walk-instant->str final-1)]
+      (is= final-1
+        [{:id 1, :lang "Clojure", :creation (Instant/parse clj-bday-str)}
+         {:id 2, :lang "Java", :creation (Instant/parse java-bday-str)}])
+      (is= final-2
+        [{:id 1, :lang "Clojure", :creation clj-bday-str}
+         {:id 2, :lang "Java", :creation java-bday-str}])
 
-  (let [result     (vec (jdbc/query db-conn ["select * from langs"]))
-        times      (mapv :creation result)
-        final-1      (tjt/walk-timestamp->instant result)
-        final-2      (tjt/walk-instant->str final-1) ]
-    (is= final-1
-      [{:id 1, :lang "Clojure", :creation (Instant/parse "2008-01-01T12:34:56.123Z")}
-       {:id 2, :lang "Java", :creation (Instant/parse "1995-06-01T07:08:09.123Z")}])
-    (is= final-2
-      [{:id 1, :lang "Clojure", :creation "2008-01-01T12:34:56.123Z"}
-       {:id 2, :lang "Java", :creation "1995-06-01T07:08:09.123Z"}])
-
-  ))
+      )))
 
 
 
