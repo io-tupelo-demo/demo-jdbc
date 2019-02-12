@@ -5,7 +5,8 @@
     [hikari-cp.core :as pool]
     [tupelo.java-time :as tjt]
     [clojure.walk :as walk])
-  (:import [java.time ZonedDateTime Instant OffsetDateTime]))
+  (:import [java.time ZonedDateTime Instant OffsetDateTime]
+           [clojure.java.api Clojure]))
 
 (def datasource-options-sample {:auto-commit        true
                                 :read-only          false
@@ -43,7 +44,10 @@
 (defn with-connection-pool
   "Creates and uses a connection for test function"
   [tst-fn]
-  (let [datasource (pool/make-datasource datasource-options-pg)]
+  (let [datasource
+       ;(pool/make-datasource datasource-options-pg)
+        (pool/make-datasource datasource-options-h2)
+        ]
     (binding [db-conn {:datasource datasource}]
       (tst-fn)
       (pool/close-datasource datasource)))) ; close the connection - also closes/destroys the in-memory database
@@ -56,21 +60,30 @@
   (jdbc/db-do-commands db-conn
     [(jdbc/create-table-ddl :langs [[:id :serial]
                                     [:lang "varchar not null"]
-                                    [:creation :timestamptz]])]) ; select => java.sql.TimeStamp
+                                   ;[:creation :timestamptz] ; PG select => java.sql.TimeStamp
+                                    [:creation :timestamp] ; H2 select => java.sql.TimeStamp
+                                   ;[:creation "timestamp with time zone" ] ; H2 => org.h2.api.TimestampWithTimeZone
+                                   ])])
+
+  ; #todo need walk->Instant to accept any #inst-like value
+  ;  j.u.Date, java.sql.Date, java.sql.Timestamp, ZonedDateTime, org.h2.api.TimestampWithTimeZone, OffsetDateTime
+
   (let [java-bday-str "1995-06-01T07:08:09.123Z"
         clj-bday-str  "2008-01-01T12:34:56.123Z"]
     (jdbc/insert-multi! db-conn :langs
-      [{:lang "Clojure" :creation (OffsetDateTime/parse clj-bday-str)}
-       {:lang "Java" :creation (OffsetDateTime/parse java-bday-str)}])
-    (let [result  (vec (jdbc/query db-conn ["select * from langs"]))
-          final-1 (tjt/walk-timestamp->instant result)
-          final-2 (tjt/walk-instant->str final-1)]
-      (is= final-1
-        [{:id 1, :lang "Clojure", :creation (Instant/parse clj-bday-str)}
-         {:id 2, :lang "Java", :creation (Instant/parse java-bday-str)}])
-      (is= final-2
-        [{:id 1, :lang "Clojure", :creation clj-bday-str}
-         {:id 2, :lang "Java", :creation java-bday-str}])
+      (tjt/walk-instant->timestamp
+        [{:lang "Clojure" :creation (Instant/parse clj-bday-str)} ; can also use OffsetDateTime/parse w/o conversion
+         {:lang "Java" :creation (Instant/parse java-bday-str)}]))
+    (let [result     (vec (jdbc/query db-conn ["select * from langs"]))
+          final-1    (tjt/walk-timestamp->instant result)
+          final-2    (tjt/walk-instant->str final-1)
+          expected-1 [{:id 1, :lang "Clojure", :creation (Instant/parse clj-bday-str)}
+                      {:id 2, :lang "Java", :creation (Instant/parse java-bday-str)}]
+          expected-2 [{:id 1, :lang "Clojure", :creation clj-bday-str}
+                      {:id 2, :lang "Java", :creation java-bday-str}]
+          ]
+      (is= (spyx-pretty final-1) (spyx-pretty expected-1))
+      (is= (spyx-pretty final-2) (spyx-pretty expected-2))
 
       )))
 
