@@ -5,14 +5,13 @@
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
      [com.h2database/h2 "1.4.197"]
-     [hikari-cp "2.3.0"]
-     [org.clojure/java.jdbc "0.7.5"]
-     [org.clojure/clojure "1.9.0"]
-     [org.clojure/spec.alpha "0.1.143"]
+     [hikari-cp "2.7.0"]
+     [org.clojure/java.jdbc "0.7.8"]
+     [org.clojure/clojure "1.10.0"]
      [org.clojure/test.check "0.9.0"]
      [org.postgresql/postgresql "42.2.5"] ; https://mvnrepository.com/artifact/org.postgresql/postgresql
-     [prismatic/schema "1.1.9"]
-     [tupelo "0.9.128"]
+     [prismatic/schema "1.1.10"]
+     [tupelo "0.9.129"]
      ]
   :profiles {:dev     {:dependencies []
                        :plugins      [[com.jakemccrary/lein-test-refresh "0.22.0"]
