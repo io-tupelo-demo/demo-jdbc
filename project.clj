@@ -4,14 +4,14 @@
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
-     [com.h2database/h2 "1.4.197"]
+     [com.h2database/h2 "1.4.198"]
      [hikari-cp "2.7.0"]
-     [org.clojure/java.jdbc "0.7.8"]
+     [org.clojure/java.jdbc "0.7.9"]
      [org.clojure/clojure "1.10.0"]
      [org.clojure/test.check "0.9.0"]
      [org.postgresql/postgresql "42.2.5"] ; https://mvnrepository.com/artifact/org.postgresql/postgresql
      [prismatic/schema "1.1.10"]
-     [tupelo "0.9.129"]
+     [tupelo "0.9.130"]
      ]
   :profiles {:dev     {:dependencies []
                        :plugins      [[com.jakemccrary/lein-test-refresh "0.22.0"]
