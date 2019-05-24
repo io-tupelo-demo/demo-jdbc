@@ -6,6 +6,7 @@
   :dependencies [
      [com.h2database/h2 "1.4.198"]
      [hikari-cp "2.7.0"]
+                 ; #todo try jdbc.next and porsas 
      [org.clojure/java.jdbc "0.7.9"]
      [org.clojure/clojure "1.10.0"]
      [org.clojure/test.check "0.9.0"]
