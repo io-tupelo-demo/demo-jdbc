@@ -24,7 +24,7 @@
   :main ^:skip-aot demo.core
 
   :source-paths ["src"]
-  :test-paths ["src"]
+  :test-paths ["test"]
   :libs [ "libs/"]
   :java-source-paths ["src-java"]
   :target-path "target/%s"
