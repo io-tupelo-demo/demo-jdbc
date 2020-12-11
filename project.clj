@@ -4,20 +4,20 @@
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
-     [com.h2database/h2 "1.4.198"]
-     [hikari-cp "2.7.0"]
+     [com.h2database/h2 "1.4.200"]
+     [hikari-cp "2.13.0"]
                  ; #todo try jdbc.next and porsas 
-     [org.clojure/java.jdbc "0.7.9"]
-     [org.clojure/clojure "1.10.0"]
-     [org.clojure/test.check "0.9.0"]
-     [org.postgresql/postgresql "42.2.5"] ; https://mvnrepository.com/artifact/org.postgresql/postgresql
-     [prismatic/schema "1.1.10"]
-     [tupelo "0.9.130"]
+     [org.clojure/java.jdbc "0.7.11"]
+     [org.clojure/clojure "1.10.1"]
+     [org.clojure/test.check "1.1.0"]
+     [org.postgresql/postgresql "42.2.18"] ; https://mvnrepository.com/artifact/org.postgresql/postgresql
+     [prismatic/schema "1.1.12"]
+     [tupelo "20.12.03"]
      ]
   :profiles {:dev     {:dependencies []
-                       :plugins      [[com.jakemccrary/lein-test-refresh "0.22.0"]
+                       :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
                                       [lein-ancient "0.6.15"]
-                                      [lein-codox "0.10.3"]]}
+                                      [lein-codox "0.10.7"]]}
              :uberjar {:aot :all}}
 
   :global-vars {*warn-on-reflection* false}
