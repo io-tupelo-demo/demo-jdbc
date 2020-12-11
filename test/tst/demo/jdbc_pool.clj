@@ -1,9 +1,10 @@
 (ns tst.demo.jdbc-pool
   (:use demo.core tupelo.core tupelo.test)
   (:require
+    [clojure.test :as cljtst]
     [clojure.java.jdbc :as jdbc]
     [hikari-cp.core :as pool]
-    [tupelo.java-time :as tjt]
+    [tupelo.java-time :as jt]
     [clojure.walk :as walk])
   (:import [java.time ZonedDateTime Instant OffsetDateTime]
            [clojure.java.api Clojure]))
@@ -52,10 +53,11 @@
       (tst-fn)
       (pool/close-datasource datasource)))) ; close the connection - also closes/destroys the in-memory database
 
-(use-fixtures
+(cljtst/use-fixtures
   :once with-connection-pool) ; use the same db connection pool for all tests
 
 (dotest
+  (println "---------------------------------------------------------------------------------------------------")
   (jdbc/db-do-commands db-conn ["drop table if exists langs"])
   (jdbc/db-do-commands db-conn
     [(jdbc/create-table-ddl :langs [[:id :serial]
@@ -71,12 +73,12 @@
   (let [java-bday-str "1995-06-01T07:08:09.123Z"
         clj-bday-str  "2008-01-01T12:34:56.123Z"]
     (jdbc/insert-multi! db-conn :langs
-      (tjt/walk-instant->timestamp
+      (jt/walk-instant->timestamp
         [{:lang "Clojure" :creation (Instant/parse clj-bday-str)} ; can also use OffsetDateTime/parse w/o conversion
          {:lang "Java" :creation (Instant/parse java-bday-str)}]))
     (let [result     (vec (jdbc/query db-conn ["select * from langs"]))
-          final-1    (tjt/walk-timestamp->instant result)
-          final-2    (tjt/walk-instant->str final-1)
+          final-1    (jt/walk-timestamp->instant result)
+          final-2    (jt/walk-instant->str final-1)
           expected-1 [{:id 1, :lang "Clojure", :creation (Instant/parse clj-bday-str)}
                       {:id 2, :lang "Java", :creation (Instant/parse java-bday-str)}]
           expected-2 [{:id 1, :lang "Clojure", :creation clj-bday-str}
@@ -85,7 +87,9 @@
       (is= (spyx-pretty final-1) (spyx-pretty expected-1))
       (is= (spyx-pretty final-2) (spyx-pretty expected-2))
 
-      )))
+      ))
+  (println "---------------------------------------------------------------------------------------------------")
+  )
 
 
 
