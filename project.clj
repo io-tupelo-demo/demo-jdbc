@@ -5,26 +5,21 @@
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
      [com.h2database/h2 "1.4.197"]
-     [hikari-cp "2.3.0"]
-     [org.clojure/java.jdbc "0.7.5"]
-     [org.clojure/clojure "1.9.0"]
-     [org.clojure/spec.alpha "0.1.143"]
-     [org.clojure/test.check "0.9.0"]
-     [prismatic/schema "1.1.9"]
-     [tupelo "0.9.111"]
+     [hikari-cp "2.14.0"]
+     [org.clojure/java.jdbc "0.7.12"]
+     [org.clojure/clojure "1.11.1"]
+     [org.clojure/spec.alpha "0.3.218"]
+     [org.clojure/test.check "1.1.1"]
+     [prismatic/schema "1.3.5"]
+     [tupelo "22.07.25a"]
      ]
-  :profiles {:dev     {:dependencies []
-                       :plugins      [[com.jakemccrary/lein-test-refresh "0.22.0"]
-                                      [lein-ancient "0.6.15"]
-                                      [lein-codox "0.10.3"]]}
-             :uberjar {:aot :all}}
+  :plugins      [[com.jakemccrary/lein-test-refresh "0.25.0"]]
 
   :global-vars {*warn-on-reflection* false}
   :main ^:skip-aot demo.core
 
   :source-paths ["src"]
   :test-paths ["src"]
-  :java-source-paths ["src-java"]
   :target-path "target/%s"
   :jvm-opts ["-Xms500m" "-Xmx2g"]
   )
