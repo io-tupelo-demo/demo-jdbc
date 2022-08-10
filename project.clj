@@ -8,8 +8,6 @@
      [hikari-cp "2.14.0"]
      [org.clojure/clojure "1.11.1"]
      [org.clojure/java.jdbc "0.7.12"]
-     [org.clojure/spec.alpha "0.3.218"]
-     [org.clojure/test.check "1.1.1"]
      [prismatic/schema "1.3.5"]
      [tupelo "22.07.25a"]
      ]
